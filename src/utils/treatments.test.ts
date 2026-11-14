@@ -1,0 +1,137 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  TRUST_BAR_ITEMS,
+  HERO_ACTIONS,
+  PLAN_CAROUSEL_SLIDES,
+  PATHWAYS_INTRO,
+  CLINICAL_PATHWAYS,
+  getNextSlideIndex,
+  normalizeSlideIndex,
+  validateConsultationIntake,
+  evaluateMasterTimeline,
+  interpolatePathwayBackgroundColor,
+  computeTextStepMotion,
+} from './treatments';
+
+test('preserves exact trust bar and hero button labels from client screenshots', () => {
+  assert.deepEqual(TRUST_BAR_ITEMS, [
+    'FREE AND DISCRETE SHIPPING',
+    '100% ONLINE PROCESS',
+    'USED AND TRUSTED BY MILLIONS AROUND THE WORLD',
+    'FULLY CONFIDENTIAL',
+  ]);
+
+  assert.deepEqual(
+    HERO_ACTIONS.map((a) => a.label),
+    ['Medical weight loss', 'Hair growth', 'Sexual Health', 'Start consultation']
+  );
+});
+
+test('preserves exact Focused Clinical Pathways headings, stats, checklists, and backgrounds', () => {
+  assert.equal(PATHWAYS_INTRO.heading, 'Focused Clinical Pathways');
+  assert.equal(
+    PATHWAYS_INTRO.subtitle,
+    'Precision treatment protocols designed for sustained biological optimization.'
+  );
+  assert.equal(CLINICAL_PATHWAYS.length, 3);
+
+  assert.deepEqual(
+    CLINICAL_PATHWAYS.map((p) => ({
+      title: p.title,
+      bg: p.backgroundHex,
+      pos: p.videoPosition,
+    })),
+    [
+      { title: 'Medical Weight Loss', bg: '#D9DADD', pos: 'left' },
+      { title: 'Hair Restoration', bg: '#D3DCF7', pos: 'right' },
+      { title: 'Sexual Health', bg: '#F2C6CF', pos: 'left' },
+    ]
+  );
+});
+
+test('master timeline enforces exact background, product, and staggered text keyframes', () => {
+  // Background starts grey #D9DADD (0.00-0.22), lavender #D3DCF7 by 0.32 (holds to 0.58), pink #F2C6CF by 0.68 (holds to 1.0)
+  assert.equal(interpolatePathwayBackgroundColor(0.0), 'rgb(217, 218, 221)'); // Grey #D9DADD from start
+  assert.equal(interpolatePathwayBackgroundColor(0.22), 'rgb(217, 218, 221)'); // Grey #D9DADD until 0.22
+  assert.equal(interpolatePathwayBackgroundColor(0.32), 'rgb(211, 220, 247)'); // Lavender #D3DCF7 by 0.32 (before P2 enters)
+  assert.equal(interpolatePathwayBackgroundColor(0.58), 'rgb(211, 220, 247)'); // Holds Lavender #D3DCF7 to 0.58
+  assert.equal(interpolatePathwayBackgroundColor(0.68), 'rgb(242, 198, 207)'); // Pink #F2C6CF by 0.68 (before P3 enters)
+  assert.equal(interpolatePathwayBackgroundColor(1.0), 'rgb(242, 198, 207)'); // Holds Pink #F2C6CF until end
+
+  // Product 1: visible 0.00-0.22 with no enter delay, exits 0.22-0.26
+  assert.equal(evaluateMasterTimeline(0.0).products[0].opacity, 1);
+  assert.equal(evaluateMasterTimeline(0.0).products[0].isVisible, true);
+  assert.equal(evaluateMasterTimeline(0.22).products[0].opacity, 1);
+  assert.equal(evaluateMasterTimeline(0.27).products[0].isVisible, false);
+
+  // Product 2: enters 0.32-0.38, holds to 0.58, exits 0.58-0.62
+  assert.equal(evaluateMasterTimeline(0.31).products[1].isVisible, false);
+  assert.equal(evaluateMasterTimeline(0.45).products[1].opacity, 1);
+  assert.equal(evaluateMasterTimeline(0.58).products[1].opacity, 1);
+  assert.equal(evaluateMasterTimeline(0.63).products[1].isVisible, false);
+
+  // Staggered text motion: earlier steps have higher opacity and smaller translateY than later steps during entry
+  const step0AtEntry = computeTextStepMotion(0.35, 1, 0);
+  const step5AtEntry = computeTextStepMotion(0.35, 1, 5);
+  assert.ok(step0AtEntry.opacity > step5AtEntry.opacity);
+  assert.ok(step0AtEntry.translateY < step5AtEntry.translateY);
+
+  // Product 3: enters 0.68-0.74 and stays visible to p = 1.0 with no exit
+  assert.equal(evaluateMasterTimeline(0.67).products[2].isVisible, false);
+  assert.equal(evaluateMasterTimeline(0.74).products[2].opacity, 1);
+  assert.equal(evaluateMasterTimeline(0.90).products[2].opacity, 1);
+  assert.equal(evaluateMasterTimeline(1.0).products[2].opacity, 1);
+  assert.equal(evaluateMasterTimeline(1.0).products[2].isVisible, true);
+});
+
+test('carousel index helpers wrap cleanly across 3 slides', () => {
+  assert.equal(PLAN_CAROUSEL_SLIDES.length, 3);
+  assert.equal(getNextSlideIndex(0, 3), 1);
+  assert.equal(getNextSlideIndex(1, 3), 2);
+  assert.equal(getNextSlideIndex(2, 3), 0);
+  assert.equal(normalizeSlideIndex(-1, 3), 2);
+  assert.equal(normalizeSlideIndex(4, 3), 1);
+});
+
+test('consultation intake validator checks required fields and age', () => {
+  assert.equal(
+    validateConsultationIntake({
+      category: 'weight-loss',
+      fullName: '',
+      email: 'patient@example.com',
+      age: '34',
+    }).valid,
+    false
+  );
+
+  assert.equal(
+    validateConsultationIntake({
+      category: 'hair-growth',
+      fullName: 'Aarav Sharma',
+      email: 'invalid-email',
+      age: '34',
+    }).valid,
+    false
+  );
+
+  assert.equal(
+    validateConsultationIntake({
+      category: 'sexual-health',
+      fullName: 'Aarav Sharma',
+      email: 'aarav@example.com',
+      age: '16',
+    }).valid,
+    false
+  );
+
+  assert.equal(
+    validateConsultationIntake({
+      category: 'weight-loss',
+      fullName: 'Aarav Sharma',
+      email: 'aarav@example.com',
+      age: '34',
+    }).valid,
+    true
+  );
+});

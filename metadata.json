@@ -1,0 +1,6 @@
+{
+  "name": "suga.health — Telehealth & Personalized Clinical Care",
+  "description": "Clinically proven, FDA (USA) approved treatments for medical weight loss, hair growth, and sexual health prescribed online by experts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
