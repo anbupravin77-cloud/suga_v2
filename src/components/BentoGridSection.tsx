@@ -48,7 +48,7 @@ export const BentoGridSection: React.FC<BentoGridSectionProps> = ({
         >
           {!imageErrors['weight-loss-pen'] ? (
             <img
-              src="/src/assets/images/medical_weight_loss_studio_pen_1794672846543.jpg"
+              src="/assets/images/medical_weight_loss_studio_pen_1794672846543.jpg"
               alt="Sleek GLP-1 medical weight loss auto-injector pen held in studio lighting"
               referrerPolicy="no-referrer"
               onError={() => handleImageError('weight-loss-pen')}
@@ -111,7 +111,7 @@ export const BentoGridSection: React.FC<BentoGridSectionProps> = ({
         >
           {!imageErrors['plan-portrait'] ? (
             <img
-              src="/src/assets/images/bento_plan_portrait_1794669035151.jpg"
+              src="/assets/images/bento_plan_portrait_1794669035151.jpg"
               alt="Smiling patient holding personalized medical weight loss treatment pen"
               referrerPolicy="no-referrer"
               onError={() => handleImageError('plan-portrait')}
@@ -207,7 +207,7 @@ export const BentoGridSection: React.FC<BentoGridSectionProps> = ({
         >
           {!imageErrors['hair-growth'] ? (
             <img
-              src="/src/assets/images/bento_hair_growth_dropper_1794669036350.jpg"
+              src="/assets/images/bento_hair_growth_dropper_1794669036350.jpg"
               alt="Amber glass hair growth serum bottle with dropper"
               referrerPolicy="no-referrer"
               onError={() => handleImageError('hair-growth')}
@@ -269,7 +269,7 @@ export const BentoGridSection: React.FC<BentoGridSectionProps> = ({
         >
           {!imageErrors['sexual-health'] ? (
             <img
-              src="/src/assets/images/bento_sexual_health_tablet_1794669036887.jpg"
+              src="/assets/images/bento_sexual_health_tablet_1794669036887.jpg"
               alt="Hand holding sexual health treatment tablet"
               referrerPolicy="no-referrer"
               onError={() => handleImageError('sexual-health')}
