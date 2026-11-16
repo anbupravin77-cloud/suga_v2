@@ -8,6 +8,7 @@ import { HeaderAndTrustBar } from './components/HeaderAndTrustBar';
 import { HeroSection } from './components/HeroSection';
 import { BentoGridSection } from './components/BentoGridSection';
 import { FocusedClinicalPathwaysSection } from './components/FocusedClinicalPathwaysSection';
+import { ClearMilestonesSection } from './components/ClearMilestonesSection';
 import {
   ConsultationModal,
   LoginModal,
@@ -18,6 +19,7 @@ import { ClinicalPathwayItem, TreatmentCategoryId } from './utils/treatments';
 
 export default function App() {
   const [activeCategory, setActiveCategory] = useState<TreatmentCategoryId | null>(null);
+  const [milestoneSelectionTrigger, setMilestoneSelectionTrigger] = useState<number>(0);
   const [consultationState, setConsultationState] = useState<{
     isOpen: boolean;
     category: TreatmentCategoryId;
@@ -32,7 +34,17 @@ export default function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
 
-  const handleSelectCategory = (category: TreatmentCategoryId) => {
+  // Smooth-scroll to Clear Milestones section and activate the matching tab
+  const handleJumpToMilestonesTab = (category: TreatmentCategoryId) => {
+    setActiveCategory(category);
+    setMilestoneSelectionTrigger((prev) => prev + 1);
+    const milestonesEl = document.getElementById('clear-milestones-section');
+    if (milestonesEl) {
+      milestonesEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleSelectHeroBentoCategory = (category: TreatmentCategoryId) => {
     setActiveCategory((prev) => (prev === category ? null : category));
     const cardMap: Record<TreatmentCategoryId, string> = {
       'weight-loss': 'card-weight-loss',
@@ -58,20 +70,20 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#F6F3EC] bg-subtle-noise text-[#14352B] flex flex-col">
-      {/* Header + Solid Cream Trust Strip Marquee */}
+      {/* Header + Solid Cream Trust Strip Marquee (Nav links smooth-scroll to Clear Milestones and activate matching tab) */}
       <HeaderAndTrustBar
         activeCategory={activeCategory}
-        onSelectCategory={handleSelectCategory}
+        onSelectCategory={handleJumpToMilestonesTab}
         onOpenAbout={() => setIsAboutOpen(true)}
         onOpenLogin={() => setIsLoginOpen(true)}
         onResetFilter={() => setActiveCategory(null)}
       />
 
-      {/* Main Content: Section 1 (Hero), Section 2 (Bento Grid), Section 3 (Focused Clinical Pathways) */}
+      {/* Main Content: Section 1 (Hero), Section 2 (Bento Grid), Section 3 (Focused Clinical Pathways), Section 4 (Clear Milestones) */}
       <main className="flex-1">
         <HeroSection
           activeCategory={activeCategory}
-          onSelectCategory={handleSelectCategory}
+          onSelectCategory={handleSelectHeroBentoCategory}
           onStartConsultation={(cat) =>
             handleStartConsultation(cat ?? 'weight-loss', 'Start consultation')
           }
@@ -88,7 +100,13 @@ export default function App() {
           onStartConsultation={(cat, sourceTitle) =>
             handleStartConsultation(cat, sourceTitle)
           }
-          onViewProtocol={(pathway) => setSelectedProtocol(pathway)}
+          onViewProtocol={(pathway) => handleJumpToMilestonesTab(pathway.id)}
+        />
+
+        <ClearMilestonesSection
+          externalSelectedCategory={activeCategory}
+          externalSelectionTrigger={milestoneSelectionTrigger}
+          onQualifyClick={(cat, label) => handleStartConsultation(cat, label)}
         />
       </main>
 

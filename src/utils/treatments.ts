@@ -207,6 +207,180 @@ export const CLINICAL_PATHWAYS: ClinicalPathwayItem[] = [
   },
 ];
 
+export interface MilestoneStep {
+  stepNumber: string;
+  timeframeBadge: string;
+  title: string;
+  description: string;
+}
+
+export interface MilestoneCategoryTab {
+  id: TreatmentCategoryId;
+  tabLabel: string;
+  backgroundHex: string;
+  originYPercent: number;
+  milestones: [MilestoneStep, MilestoneStep, MilestoneStep];
+}
+
+export const MILESTONES_INTRO = {
+  heading: 'Clear Milestones from Day 1.',
+  subtitle:
+    'Expect real, measurable physiological changes with continuous medical guidance.',
+  ctaLabel: 'See if you qualify today',
+  timelineHeaderLeft: 'TREATMENT TIMELINE',
+  timelineHeaderRight: '03 MILESTONES',
+};
+
+export const MILESTONE_TABS: MilestoneCategoryTab[] = [
+  {
+    id: 'weight-loss',
+    tabLabel: 'Weight Loss',
+    backgroundHex: '#D9DADD',
+    originYPercent: 16,
+    milestones: [
+      {
+        timeframeBadge: 'MONTH 1',
+        stepNumber: 'STEP 01',
+        title: 'Metabolic Reset',
+        description:
+          "Initial micro-dose titration minimizes side effects while dampening constant food cravings and biological 'food noise'.",
+      },
+      {
+        timeframeBadge: 'MONTHS 2–3',
+        stepNumber: 'STEP 02',
+        title: 'Consistent Loss',
+        description:
+          'Steady 1–2 lbs weekly reduction. Improved insulin sensitivity, increased daytime energy, and reduced visceral fat.',
+      },
+      {
+        timeframeBadge: 'MONTHS 4–6+',
+        stepNumber: 'STEP 03',
+        title: 'Target Stability',
+        description:
+          'Reach your personal target weight. Physician evaluates maintenance dosing to lock in sustainable metabolic health.',
+      },
+    ],
+  },
+  {
+    id: 'hair-growth',
+    tabLabel: 'Hair Regrowth',
+    backgroundHex: '#D3DCF7',
+    originYPercent: 42,
+    milestones: [
+      {
+        timeframeBadge: 'MONTHS 1–2',
+        stepNumber: 'STEP 01',
+        title: 'Follicle Stabilization',
+        description:
+          'DHT inhibition begins. Normal initial shedding of weak hairs as miniaturized follicles enter the active anagen growth phase.',
+      },
+      {
+        timeframeBadge: 'MONTHS 3–4',
+        stepNumber: 'STEP 02',
+        title: 'Initial Regrowth',
+        description:
+          'Early signs of thickening along the crown and hairline. Faint vellus hairs transition into stronger terminal strands.',
+      },
+      {
+        timeframeBadge: 'MONTHS 6+',
+        stepNumber: 'STEP 03',
+        title: 'Peak Density',
+        description:
+          'Noticeably denser coverage, reduced scalp visibility, and strengthened hair shafts with permanent daily routine.',
+      },
+    ],
+  },
+  {
+    id: 'sexual-health',
+    tabLabel: 'Sexual Health',
+    backgroundHex: '#F2C6CF',
+    originYPercent: 68,
+    milestones: [
+      {
+        timeframeBadge: 'DAY 1',
+        stepNumber: 'STEP 01',
+        title: 'Immediate Efficacy',
+        description:
+          'On-demand or daily protocol delivers reliable blood flow within 30 to 60 minutes of ingestion.',
+      },
+      {
+        timeframeBadge: 'WEEKS 2–4',
+        stepNumber: 'STEP 02',
+        title: 'Confidence Restored',
+        description:
+          'Elimination of performance anxiety. Daily micro-dosing allows completely spontaneous, natural intimacy.',
+      },
+      {
+        timeframeBadge: 'ONGOING',
+        stepNumber: 'STEP 03',
+        title: 'Continuous Optimization',
+        description:
+          'Regular check-ins with your Suga physician to fine-tune dosage, refill automatically, and monitor total vascular health.',
+      },
+    ],
+  },
+];
+
+export function getMilestoneTabById(id: TreatmentCategoryId): MilestoneCategoryTab {
+  return MILESTONE_TABS.find((t) => t.id === id) ?? MILESTONE_TABS[0];
+}
+
+export interface MilestoneSwitchTimings {
+  enableRipple: boolean;
+  bgTransitionMs: number;
+  rippleDurationMs: number;
+  secondRippleDelayMs: number;
+  collapseDurationMs: number;
+  dotPulseDelayMs: number;
+  dotPulseDurationMs: number;
+  expandStartMs: number;
+  expandDurationMs: number;
+  expandStaggerMs: number;
+  mobileAccordionHeightMs: number;
+  reducedMotionFadeMs: number;
+}
+
+export function getMilestoneSwitchTimings(
+  isInterruptedMidAnimation: boolean,
+  prefersReducedMotion = false
+): MilestoneSwitchTimings {
+  if (prefersReducedMotion) {
+    return {
+      enableRipple: false,
+      bgTransitionMs: 200,
+      rippleDurationMs: 0,
+      secondRippleDelayMs: 0,
+      collapseDurationMs: 0,
+      dotPulseDelayMs: 0,
+      dotPulseDurationMs: 0,
+      expandStartMs: 0,
+      expandDurationMs: 200,
+      expandStaggerMs: 0,
+      mobileAccordionHeightMs: 200,
+      reducedMotionFadeMs: 200,
+    };
+  }
+
+  const collapseMs = isInterruptedMidAnimation ? 160 : 320;
+  const dotPulseDelay = isInterruptedMidAnimation ? 120 : 240;
+
+  return {
+    enableRipple: true,
+    bgTransitionMs: 600,
+    rippleDurationMs: 700,
+    secondRippleDelayMs: 140,
+    collapseDurationMs: collapseMs,
+    dotPulseDelayMs: dotPulseDelay,
+    dotPulseDurationMs: 300,
+    expandStartMs: collapseMs,
+    expandDurationMs: 480,
+    expandStaggerMs: 90,
+    mobileAccordionHeightMs: 300,
+    reducedMotionFadeMs: 200,
+  };
+}
+
+
 /**
  * Standard Hermite smoothstep easing (0 -> 1) within [edge0, edge1].
  */

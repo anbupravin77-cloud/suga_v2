@@ -6,6 +6,10 @@ import {
   PLAN_CAROUSEL_SLIDES,
   PATHWAYS_INTRO,
   CLINICAL_PATHWAYS,
+  MILESTONES_INTRO,
+  MILESTONE_TABS,
+  getMilestoneTabById,
+  getMilestoneSwitchTimings,
   getNextSlideIndex,
   normalizeSlideIndex,
   validateConsultationIntake,
@@ -48,6 +52,64 @@ test('preserves exact Focused Clinical Pathways headings, stats, checklists, and
       { title: 'Sexual Health', bg: '#F2C6CF', pos: 'left' },
     ]
   );
+});
+
+test('preserves exact Clear Milestones from Day 1 copy, tab labels, backgrounds, and 9 milestone cards', () => {
+  assert.equal(MILESTONES_INTRO.heading, 'Clear Milestones from Day 1.');
+  assert.equal(
+    MILESTONES_INTRO.subtitle,
+    'Expect real, measurable physiological changes with continuous medical guidance.'
+  );
+  assert.equal(MILESTONES_INTRO.ctaLabel, 'See if you qualify today');
+  assert.deepEqual(
+    MILESTONE_TABS.map((t) => ({
+      id: t.id,
+      label: t.tabLabel,
+      bg: t.backgroundHex,
+      titles: t.milestones.map((m) => m.title),
+    })),
+    [
+      {
+        id: 'weight-loss',
+        label: 'Weight Loss',
+        bg: '#D9DADD',
+        titles: ['Metabolic Reset', 'Consistent Loss', 'Target Stability'],
+      },
+      {
+        id: 'hair-growth',
+        label: 'Hair Regrowth',
+        bg: '#D3DCF7',
+        titles: ['Follicle Stabilization', 'Initial Regrowth', 'Peak Density'],
+      },
+      {
+        id: 'sexual-health',
+        label: 'Sexual Health',
+        bg: '#F2C6CF',
+        titles: ['Immediate Efficacy', 'Confidence Restored', 'Continuous Optimization'],
+      },
+    ]
+  );
+  assert.equal(getMilestoneTabById('hair-growth').tabLabel, 'Hair Regrowth');
+
+  const normalTimings = getMilestoneSwitchTimings(false, false);
+  assert.equal(normalTimings.enableRipple, true);
+  assert.equal(normalTimings.rippleDurationMs, 700);
+  assert.equal(normalTimings.secondRippleDelayMs, 140);
+  assert.equal(normalTimings.collapseDurationMs, 320);
+  assert.equal(normalTimings.dotPulseDelayMs, 240);
+  assert.equal(normalTimings.dotPulseDurationMs, 300);
+  assert.equal(normalTimings.expandStartMs, 320);
+  assert.equal(normalTimings.expandDurationMs, 480);
+  assert.equal(normalTimings.expandStaggerMs, 90);
+
+  const fastTimings = getMilestoneSwitchTimings(true, false);
+  assert.equal(fastTimings.collapseDurationMs, 160);
+  assert.equal(fastTimings.dotPulseDelayMs, 120);
+  assert.equal(fastTimings.expandStartMs, 160);
+
+  const reducedTimings = getMilestoneSwitchTimings(false, true);
+  assert.equal(reducedTimings.enableRipple, false);
+  assert.equal(reducedTimings.reducedMotionFadeMs, 200);
 });
 
 test('master timeline enforces exact background, product, and staggered text keyframes', () => {
