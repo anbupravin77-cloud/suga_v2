@@ -15,7 +15,12 @@ import {
   AboutModal,
   ProtocolModal,
 } from './components/InteractiveModals';
-import { ClinicalPathwayItem, TreatmentCategoryId } from './utils/treatments';
+import {
+  ClinicalPathwayItem,
+  TreatmentCategoryId,
+  PATHWAY_TARGET_PROGRESS,
+  computeScrollYForPathwayProgress,
+} from './utils/treatments';
 
 export default function App() {
   const [activeCategory, setActiveCategory] = useState<TreatmentCategoryId | null>(null);
@@ -34,13 +39,48 @@ export default function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
 
-  // Smooth-scroll to Clear Milestones section and activate the matching tab
-  const handleJumpToMilestonesTab = (category: TreatmentCategoryId) => {
+  // Smooth-scroll to the target product progress p (Weight Loss: 0.05, Hair: 0.50, Sexual Health: 0.85)
+  // below the sticky header and activate the matching tab in ClearMilestonesSection
+  const handleNavigateToPathwayProduct = (category: TreatmentCategoryId) => {
     setActiveCategory(category);
     setMilestoneSelectionTrigger((prev) => prev + 1);
-    const milestonesEl = document.getElementById('clear-milestones-section');
-    if (milestonesEl) {
-      milestonesEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    const wrapperEl = document.getElementById('pathways-scroll-wrapper');
+    const stageEl = document.getElementById('pathways-sticky-stage');
+
+    if (wrapperEl && stageEl) {
+      const scrollY = window.scrollY || window.pageYOffset || 0;
+      const wrapperRect = wrapperEl.getBoundingClientRect();
+      const stageRect = stageEl.getBoundingClientRect();
+      const headerEl = document.getElementById('site-header');
+      const headerH = headerEl
+        ? Math.round(headerEl.getBoundingClientRect().height)
+        : parseFloat(
+            getComputedStyle(document.documentElement).getPropertyValue('--header-h')
+          ) || 115;
+
+      const wrapperTop = wrapperRect.top + scrollY;
+      const wrapperHeight = wrapperEl.offsetHeight || wrapperRect.height;
+      const stageHeight =
+        stageEl.offsetHeight || stageRect.height || window.innerHeight - headerH;
+      const targetP = PATHWAY_TARGET_PROGRESS[category];
+
+      const targetScrollY = computeScrollYForPathwayProgress(
+        targetP,
+        wrapperTop,
+        wrapperHeight,
+        stageHeight,
+        headerH
+      );
+
+      window.scrollTo({ top: targetScrollY, behavior: 'smooth' });
+      return;
+    }
+
+    // Fallback when flowing bands are rendered
+    const fallbackBandEl = document.getElementById(`pathway-${category}`);
+    if (fallbackBandEl) {
+      fallbackBandEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
@@ -70,10 +110,10 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#F6F3EC] bg-subtle-noise text-[#14352B] flex flex-col">
-      {/* Header + Solid Cream Trust Strip Marquee (Nav links smooth-scroll to Clear Milestones and activate matching tab) */}
+      {/* Header + Solid Cream Trust Strip Marquee */}
       <HeaderAndTrustBar
         activeCategory={activeCategory}
-        onSelectCategory={handleJumpToMilestonesTab}
+        onSelectCategory={handleNavigateToPathwayProduct}
         onOpenAbout={() => setIsAboutOpen(true)}
         onOpenLogin={() => setIsLoginOpen(true)}
         onResetFilter={() => setActiveCategory(null)}
@@ -100,7 +140,7 @@ export default function App() {
           onStartConsultation={(cat, sourceTitle) =>
             handleStartConsultation(cat, sourceTitle)
           }
-          onViewProtocol={(pathway) => handleJumpToMilestonesTab(pathway.id)}
+          onViewProtocol={(pathway) => handleNavigateToPathwayProduct(pathway.id)}
         />
 
         <ClearMilestonesSection

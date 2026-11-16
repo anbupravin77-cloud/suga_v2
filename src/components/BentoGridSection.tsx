@@ -42,6 +42,7 @@ export const BentoGridSection: React.FC<BentoGridSectionProps> = ({
         <article
           id="card-weight-loss"
           onClick={() => onExploreTreatment('weight-loss', 'Medical weight loss')}
+          style={{ scrollMarginTop: 'calc(var(--header-h, 115px) + 16px)' }}
           className={`sm:col-span-2 lg:col-span-6 lg:row-span-1 group relative overflow-hidden rounded-[32px] bg-[#14352B] min-h-[380px] lg:min-h-0 flex flex-col justify-between p-7 sm:p-8 shadow-[0_10px_30px_-12px_rgba(20,53,43,0.16)] cursor-pointer transition-all duration-300 ${isHighlighted(
             'weight-loss'
           )}`}
@@ -50,6 +51,9 @@ export const BentoGridSection: React.FC<BentoGridSectionProps> = ({
             <img
               src="/assets/images/medical_weight_loss_studio_pen_1794672846543.jpg"
               alt="Sleek GLP-1 medical weight loss auto-injector pen held in studio lighting"
+              width={800}
+              height={600}
+              decoding="async"
               referrerPolicy="no-referrer"
               onError={() => handleImageError('weight-loss-pen')}
               className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-600 ease-out group-hover:scale-[1.03]"
@@ -105,6 +109,7 @@ export const BentoGridSection: React.FC<BentoGridSectionProps> = ({
         <article
           id="card-personalized-plan"
           onClick={() => onExploreTreatment('weight-loss', 'A plan built around you')}
+          style={{ scrollMarginTop: 'calc(var(--header-h, 115px) + 16px)' }}
           className={`sm:col-span-2 lg:col-span-6 lg:row-span-2 group relative overflow-hidden rounded-[32px] bg-[#14352B] min-h-[540px] lg:min-h-0 flex flex-col justify-between p-7 sm:p-8 shadow-[0_10px_30px_-12px_rgba(20,53,43,0.16)] cursor-pointer transition-all duration-300 ${isHighlighted(
             'weight-loss'
           )}`}
@@ -113,6 +118,9 @@ export const BentoGridSection: React.FC<BentoGridSectionProps> = ({
             <img
               src="/assets/images/bento_plan_portrait_1794669035151.jpg"
               alt="Smiling patient holding personalized medical weight loss treatment pen"
+              width={800}
+              height={1000}
+              decoding="async"
               referrerPolicy="no-referrer"
               onError={() => handleImageError('plan-portrait')}
               className={`absolute inset-0 w-full h-full object-cover object-top transition-all duration-600 ease-out group-hover:scale-[1.03] ${
@@ -201,6 +209,7 @@ export const BentoGridSection: React.FC<BentoGridSectionProps> = ({
         <article
           id="card-hair-growth"
           onClick={() => onExploreTreatment('hair-growth', 'Hair growth')}
+          style={{ scrollMarginTop: 'calc(var(--header-h, 115px) + 16px)' }}
           className={`sm:col-span-1 lg:col-span-3 lg:row-span-1 group relative overflow-hidden rounded-[32px] bg-[#14352B] min-h-[280px] lg:min-h-0 flex flex-col justify-between p-6 sm:p-7 shadow-[0_10px_30px_-12px_rgba(20,53,43,0.16)] cursor-pointer transition-all duration-300 ${isHighlighted(
             'hair-growth'
           )}`}
@@ -209,6 +218,9 @@ export const BentoGridSection: React.FC<BentoGridSectionProps> = ({
             <img
               src="/assets/images/bento_hair_growth_dropper_1794669036350.jpg"
               alt="Amber glass hair growth serum bottle with dropper"
+              width={600}
+              height={600}
+              decoding="async"
               referrerPolicy="no-referrer"
               onError={() => handleImageError('hair-growth')}
               className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-600 ease-out group-hover:scale-[1.03]"
@@ -263,6 +275,7 @@ export const BentoGridSection: React.FC<BentoGridSectionProps> = ({
         <article
           id="card-sexual-health"
           onClick={() => onExploreTreatment('sexual-health', 'Sexual health')}
+          style={{ scrollMarginTop: 'calc(var(--header-h, 115px) + 16px)' }}
           className={`sm:col-span-1 lg:col-span-3 lg:row-span-1 group relative overflow-hidden rounded-[32px] bg-[#14352B] min-h-[280px] lg:min-h-0 flex flex-col justify-between p-6 sm:p-7 shadow-[0_10px_30px_-12px_rgba(20,53,43,0.16)] cursor-pointer transition-all duration-300 ${isHighlighted(
             'sexual-health'
           )}`}
@@ -271,6 +284,9 @@ export const BentoGridSection: React.FC<BentoGridSectionProps> = ({
             <img
               src="/assets/images/bento_sexual_health_tablet_1794669036887.jpg"
               alt="Hand holding sexual health treatment tablet"
+              width={600}
+              height={600}
+              decoding="async"
               referrerPolicy="no-referrer"
               onError={() => handleImageError('sexual-health')}
               className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-600 ease-out group-hover:scale-[1.03]"

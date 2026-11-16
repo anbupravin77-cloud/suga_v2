@@ -418,9 +418,33 @@ export interface ProductMotionState {
 
 export interface MasterTimelineState {
   p: number;
+  lavenderOpacity: number;
+  pinkOpacity: number;
   backgroundColor: string;
   products: [ProductMotionState, ProductMotionState, ProductMotionState];
-  activeVideoIndex: 0 | 1 | 2 | null;
+  activeVideoIndex: 0 | 1 | 2;
+}
+
+export const PATHWAY_TARGET_PROGRESS: Record<TreatmentCategoryId, number> = {
+  'weight-loss': 0.05,
+  'hair-growth': 0.5,
+  'sexual-health': 0.85,
+};
+
+/**
+ * Computes the exact window.scrollY position to land at target progress p
+ * below the sticky header.
+ */
+export function computeScrollYForPathwayProgress(
+  p: number,
+  wrapperTop: number,
+  wrapperHeight: number,
+  stageHeight: number,
+  headerHeight: number
+): number {
+  const clampedP = Math.max(0, Math.min(1, p));
+  const scrollable = Math.max(1, wrapperHeight - stageHeight);
+  return Math.max(0, Math.round(wrapperTop - headerHeight + clampedP * scrollable));
 }
 
 const PRODUCT_RANGES: Array<{
@@ -429,46 +453,47 @@ const PRODUCT_RANGES: Array<{
   holdEnd: number;
   exitEnd: number | null;
 }> = [
-  // Product 1: visible 0.00–0.22 (no enter delay), exits 0.22–0.26
-  { enterStart: null, enterEnd: 0.0, holdEnd: 0.22, exitEnd: 0.26 },
-  // Product 2: enters 0.32–0.38, holds to 0.58, exits 0.58–0.62
-  { enterStart: 0.32, enterEnd: 0.38, holdEnd: 0.58, exitEnd: 0.62 },
-  // Product 3: enters 0.68–0.74 and stays visible to p = 1 with no exit
-  { enterStart: 0.68, enterEnd: 0.74, holdEnd: 1.0, exitEnd: null },
+  // Product 1: opacity 1 from p = 0 to 0.27, exits 0.27–0.31 (opacity 1 to 0, translateY 0 to -12px)
+  { enterStart: null, enterEnd: 0.0, holdEnd: 0.27, exitEnd: 0.315 },
+  // Product 2: enters 0.31–0.35 (opacity 0 to 1, translateY 12px to 0), holds to 0.60, exits 0.60–0.64
+  { enterStart: 0.305, enterEnd: 0.35, holdEnd: 0.6, exitEnd: 0.645 },
+  // Product 3: enters 0.64–0.68, then stays fully visible until p = 1. No exit.
+  { enterStart: 0.635, enterEnd: 0.68, holdEnd: 1.0, exitEnd: null },
 ];
 
 export function computeProductMotion(
-  p: number,
+  rawP: number,
   index: 0 | 1 | 2,
   reducedMotion = false
 ): ProductMotionState {
+  const p = Math.max(0, Math.min(1, rawP));
   const range = PRODUCT_RANGES[index];
 
   // Before enterStart (for products 2 & 3)
-  if (range.enterStart !== null && p < range.enterStart) {
+  if (range.enterStart !== null && p <= range.enterStart) {
     return {
       opacity: 0,
-      translateY: reducedMotion ? 0 : 24,
+      translateY: reducedMotion ? 0 : 12,
       isVisible: false,
     };
   }
 
   // After exitEnd (for products 1 & 2)
-  if (range.exitEnd !== null && p > range.exitEnd) {
+  if (range.exitEnd !== null && p >= range.exitEnd) {
     return {
       opacity: 0,
-      translateY: 0,
+      translateY: reducedMotion ? 0 : -12,
       isVisible: false,
     };
   }
 
-  // Enter segment (for products 2 & 3)
-  if (range.enterStart !== null && p <= range.enterEnd) {
+  // Enter segment (for products 2 & 3): opacity 0 to 1, translateY 12px to 0
+  if (range.enterStart !== null && p < range.enterEnd) {
     const s = smoothstep(range.enterStart, range.enterEnd, p);
     return {
       opacity: s,
-      translateY: reducedMotion ? 0 : 24 * (1 - s),
-      isVisible: s > 0.001,
+      translateY: reducedMotion ? 0 : 12 * (1 - s),
+      isVisible: s > 0,
     };
   }
 
@@ -481,20 +506,21 @@ export function computeProductMotion(
     };
   }
 
-  // Exit segment: range.holdEnd -> range.exitEnd
+  // Exit segment: range.holdEnd -> range.exitEnd (opacity 1 to 0, translateY 0 to -12px)
   const s = smoothstep(range.holdEnd, range.exitEnd, p);
+  const opacity = 1 - s;
   return {
-    opacity: 1 - s,
-    translateY: reducedMotion ? 0 : -24 * s,
-    isVisible: 1 - s > 0.001,
+    opacity,
+    translateY: reducedMotion ? 0 : -12 * s,
+    isVisible: opacity > 0,
   };
 }
 
 /**
  * Background keyframes:
- * - Grey (#D9DADD) until 0.22
- * - Lavender (#D3DCF7) by 0.32, hold to 0.58
- * - Pink (#F2C6CF) by 0.68, hold until the end (p = 1.00). Never returns to cream.
+ * - Grey (#D9DADD) base layer underneath
+ * - Lavender (#D3DCF7) opacity 0 to 1 over 0.27–0.35
+ * - Pink (#F2C6CF) opacity 0 to 1 over 0.60–0.68
  */
 export function interpolatePathwayBackgroundColor(progress: number): string {
   const p = Math.max(0, Math.min(1, progress));
@@ -502,112 +528,24 @@ export function interpolatePathwayBackgroundColor(progress: number): string {
   const lavender = hexToRgb('#D3DCF7');
   const pink = hexToRgb('#F2C6CF');
 
-  if (p <= 0.22) {
+  if (p <= 0.27) {
     return `rgb(${grey[0]}, ${grey[1]}, ${grey[2]})`;
   }
-  if (p <= 0.32) {
-    return mixRgbSmooth(grey, lavender, 0.22, 0.32, p);
+  if (p <= 0.35) {
+    return mixRgbSmooth(grey, lavender, 0.27, 0.35, p);
   }
-  if (p <= 0.58) {
+  if (p <= 0.6) {
     return `rgb(${lavender[0]}, ${lavender[1]}, ${lavender[2]})`;
   }
   if (p <= 0.68) {
-    return mixRgbSmooth(lavender, pink, 0.58, 0.68, p);
+    return mixRgbSmooth(lavender, pink, 0.6, 0.68, p);
   }
   return `rgb(${pink[0]}, ${pink[1]}, ${pink[2]})`;
 }
 
-export interface TextStepMotion {
-  opacity: number;
-  translateY: number;
-}
-
-/**
- * Computes staggered opacity and translateY (in px) for individual text elements
- * (stepIndex 0..5: categoryLabel, title, description, stats, checklist, buttons)
- * inside each product pathway on desktop scroll.
- */
-export function computeTextStepMotion(
-  p: number,
-  productIndex: 0 | 1 | 2,
-  stepIndex: number,
-  hasProduct1Entered = true,
-  reducedMotion = false
-): TextStepMotion {
-  if (reducedMotion) {
-    const base = computeProductMotion(p, productIndex, true);
-    return { opacity: base.opacity, translateY: 0 };
-  }
-
-  const clampedStep = Math.max(0, Math.min(5, stepIndex));
-
-  // Product 1: visible 0.00–0.22 (initial entrance driven by hasProduct1Entered), exits 0.22–0.26 with stagger
-  if (productIndex === 0) {
-    if (!hasProduct1Entered) {
-      return { opacity: 0, translateY: 22 };
-    }
-    if (p <= 0.22) {
-      return { opacity: 1, translateY: 0 };
-    }
-    if (p > 0.26) {
-      return { opacity: 0, translateY: -24 };
-    }
-    const exitStart = 0.22 + clampedStep * 0.003;
-    const exitEnd = Math.min(0.26, exitStart + 0.025);
-    const s = smoothstep(exitStart, exitEnd, p);
-    return {
-      opacity: 1 - s,
-      translateY: -24 * s,
-    };
-  }
-
-  // Product 2: enters 0.32–0.38 with per-element stagger, holds to 0.58, exits 0.58–0.62
-  if (productIndex === 1) {
-    if (p < 0.32) {
-      return { opacity: 0, translateY: 24 };
-    }
-    if (p > 0.62) {
-      return { opacity: 0, translateY: -24 };
-    }
-    const enterStart = 0.32 + clampedStep * 0.007;
-    const enterEnd = enterStart + 0.042;
-    if (p < enterEnd) {
-      const s = smoothstep(enterStart, enterEnd, p);
-      return {
-        opacity: s,
-        translateY: 24 * (1 - s),
-      };
-    }
-    if (p <= 0.58) {
-      return { opacity: 1, translateY: 0 };
-    }
-    const exitStart = 0.58 + clampedStep * 0.003;
-    const exitEnd = Math.min(0.62, exitStart + 0.025);
-    const s = smoothstep(exitStart, exitEnd, p);
-    return {
-      opacity: 1 - s,
-      translateY: -24 * s,
-    };
-  }
-
-  // Product 3: enters 0.68–0.74 with per-element stagger and stays visible to p = 1.0
-  if (p < 0.68) {
-    return { opacity: 0, translateY: 24 };
-  }
-  const enterStart = 0.68 + clampedStep * 0.007;
-  const enterEnd = enterStart + 0.042;
-  if (p < enterEnd) {
-    const s = smoothstep(enterStart, enterEnd, p);
-    return {
-      opacity: s,
-      translateY: 24 * (1 - s),
-    };
-  }
-  return { opacity: 1, translateY: 0 };
-}
-
 /**
  * Single master timeline evaluator driven purely by p (0 to 1).
+ * No stagger delays tied to scroll.
  */
 export function evaluateMasterTimeline(
   rawProgress: number,
@@ -619,13 +557,18 @@ export function evaluateMasterTimeline(
   const prod1 = computeProductMotion(p, 1, reducedMotion);
   const prod2 = computeProductMotion(p, 2, reducedMotion);
 
-  let activeVideoIndex: 0 | 1 | 2 | null = null;
-  if (prod0.isVisible) activeVideoIndex = 0;
-  else if (prod1.isVisible) activeVideoIndex = 1;
-  else if (prod2.isVisible) activeVideoIndex = 2;
+  const lavenderOpacity = smoothstep(0.27, 0.35, p);
+  const pinkOpacity = smoothstep(0.6, 0.68, p);
+
+  let activeVideoIndex: 0 | 1 | 2 = 0;
+  if (p < 0.31) activeVideoIndex = 0;
+  else if (p < 0.64) activeVideoIndex = 1;
+  else activeVideoIndex = 2;
 
   return {
     p,
+    lavenderOpacity,
+    pinkOpacity,
     backgroundColor: interpolatePathwayBackgroundColor(p),
     products: [prod0, prod1, prod2],
     activeVideoIndex,

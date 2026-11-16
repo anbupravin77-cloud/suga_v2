@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { User } from 'lucide-react';
 import { TRUST_BAR_ITEMS, TreatmentCategoryId } from '../utils/treatments';
 
 interface HeaderAndTrustBarProps {
@@ -51,33 +50,31 @@ export const HeaderAndTrustBar: React.FC<HeaderAndTrustBarProps> = ({
     >
       {/* Primary Navigation Row (Solid Cream #F6F3EC so section colours never bleed through) */}
       <div className="max-w-[1280px] mx-auto px-4 sm:px-8 h-[62px] md:h-[76px] flex items-center justify-between gap-4 sm:gap-6">
-        {/* Zone 1: Existing Logo Inside a White Rounded Container with 1px Hairline Border and Extra Padding */}
+        {/* Zone 1: Attached suga.health Live Naturally Logo Inside a White Rounded Container with 1px Hairline Border */}
         <button
           type="button"
           onClick={onResetFilter}
           aria-label="suga.health — Live Naturally home"
-          className="group relative flex items-center justify-center bg-white rounded-xl px-2.5 py-1 md:px-3 md:py-1.5 border border-[#14352B]/12 shadow-[0_2px_8px_-2px_rgba(20,53,43,0.06)] hover:border-[#14352B]/25 transition-all duration-200 shrink-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14352B]"
+          className="group relative flex items-center justify-center bg-white rounded-xl px-2.5 py-1 md:px-3.5 md:py-1.5 border border-[#14352B]/12 shadow-[0_2px_8px_-2px_rgba(20,53,43,0.06)] hover:border-[#14352B]/25 transition-all duration-200 shrink-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14352B]"
         >
           {!logoImgError ? (
-            <svg
-              viewBox="216 10 151 51"
-              className="h-[36px] md:h-[42px] w-auto block rounded-[4px]"
-              role="img"
-              aria-label="suga.health Live Naturally"
-            >
-              <image
-                href="/assets/aistudio/image_96a053dc.png"
-                width="1535"
-                height="842"
+            <span className="block h-[34px] md:h-[42px] aspect-[1345/500] overflow-hidden relative rounded-[4px]">
+              <img
+                src="/assets/aistudio/Suga.health_Live_Naturally_Logo_bb84b822.png"
+                alt="suga.health Live Naturally"
+                width={1473}
+                height={1068}
+                decoding="async"
                 onError={() => setLogoImgError(true)}
+                className="w-full h-full object-cover object-[50%_52%] scale-[1.04] block"
               />
-            </svg>
+            </span>
           ) : (
-            <span className="flex flex-col items-center justify-center px-3 py-1 rounded-[5px] border border-[#235789]/60 bg-white">
-              <span className="text-[18px] font-bold tracking-tight leading-none text-[#1F568B]">
-                suga.health
+            <span className="flex flex-col items-center justify-center px-3 py-1 rounded-[5px] bg-white">
+              <span className="text-[18px] font-bold tracking-tight leading-none text-[#08518F]">
+                suga<span className="text-[#C81E1E]">.</span>health
               </span>
-              <span className="font-editorial italic text-[13px] leading-none text-[#C93B35] -mt-0.5">
+              <span className="font-editorial italic text-[13px] leading-none text-[#C81E1E] -mt-0.5">
                 Live Naturally
               </span>
             </span>
@@ -129,22 +126,14 @@ export const HeaderAndTrustBar: React.FC<HeaderAndTrustBarProps> = ({
           </button>
         </nav>
 
-        {/* Zone 3: Right Actions — Login + User Profile Icon in Deep Forest Green */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        {/* Zone 3: Right Action — Login Button Alone (No Profile Icon) */}
+        <div className="flex items-center shrink-0">
           <button
             type="button"
             onClick={onOpenLogin}
             className="px-4 py-1.5 md:px-5 md:py-2 rounded-full border border-[#14352B]/20 bg-white hover:bg-[#14352B] hover:text-white hover:border-[#14352B] text-[13px] md:text-[13.5px] font-semibold text-[#14352B] transition-all duration-200 whitespace-nowrap shrink-0 cursor-pointer"
           >
             Login
-          </button>
-          <button
-            type="button"
-            onClick={onOpenLogin}
-            aria-label="Patient account profile"
-            className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#EAE5D9] hover:bg-[#14352B] text-[#14352B] hover:text-white flex items-center justify-center transition-colors duration-200 shrink-0 cursor-pointer"
-          >
-            <User className="w-4 h-4 stroke-[2]" />
           </button>
         </div>
       </div>

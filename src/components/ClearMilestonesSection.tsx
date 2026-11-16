@@ -124,9 +124,9 @@ export const ClearMilestonesSection: React.FC<ClearMilestonesSectionProps> = ({
   const mobileScrollTimeoutRef = useRef<number | null>(null);
 
   const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(false);
-  const [hasSectionEntered, setHasSectionEntered] = useState<boolean>(false);
+  const [hasSectionEntered, setHasSectionEntered] = useState<boolean>(true);
   const [hasInitialEntranceFinished, setHasInitialEntranceFinished] =
-    useState<boolean>(false);
+    useState<boolean>(true);
 
   // Active tab state (Weight Loss open/selected by default)
   const [activeTabId, setActiveTabId] = useState<TreatmentCategoryId>('weight-loss');
@@ -164,37 +164,48 @@ export const ClearMilestonesSection: React.FC<ClearMilestonesSectionProps> = ({
     return () => mq.removeEventListener('change', handleChange);
   }, []);
 
-  // Section scroll-into-view first entrance:
-  // 1. Heading fades up -> 2. Tabs stagger in (60ms apart) -> 3. Vertical line draws downward once & initial cards expand from dots
+  // Section scroll-into-view first entrance (visible by default; progressive reveal only when below fold)
   useEffect(() => {
     const el = sectionRef.current;
-    if (!el || typeof IntersectionObserver === 'undefined') {
+    if (
+      !el ||
+      typeof window === 'undefined' ||
+      typeof IntersectionObserver === 'undefined' ||
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    ) {
       setHasSectionEntered(true);
       setHasInitialEntranceFinished(true);
       return;
     }
 
-    let cardsTimer: number | null = null;
+    const vh = window.innerHeight || 900;
+    const rect = el.getBoundingClientRect();
+    if (rect.top <= vh * 1.12) {
+      setHasSectionEntered(true);
+      setHasInitialEntranceFinished(true);
+      return;
+    }
+
+    setHasSectionEntered(false);
+    setHasInitialEntranceFinished(false);
+
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
             setHasSectionEntered(true);
-            cardsTimer = window.setTimeout(() => {
-              setHasInitialEntranceFinished(true);
-            }, 260);
+            setHasInitialEntranceFinished(true);
             observer.disconnect();
             break;
           }
         }
       },
-      { threshold: 0.15 }
+      { rootMargin: '0px 0px 14% 0px', threshold: 0.01 }
     );
 
     observer.observe(el);
     return () => {
       observer.disconnect();
-      if (cardsTimer !== null) window.clearTimeout(cardsTimer);
     };
   }, []);
 

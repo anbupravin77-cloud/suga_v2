@@ -15,7 +15,8 @@ import {
   validateConsultationIntake,
   evaluateMasterTimeline,
   interpolatePathwayBackgroundColor,
-  computeTextStepMotion,
+  PATHWAY_TARGET_PROGRESS,
+  computeScrollYForPathwayProgress,
 } from './treatments';
 
 test('preserves exact trust bar and hero button labels from client screenshots', () => {
@@ -112,39 +113,63 @@ test('preserves exact Clear Milestones from Day 1 copy, tab labels, backgrounds,
   assert.equal(reducedTimings.reducedMotionFadeMs, 200);
 });
 
-test('master timeline enforces exact background, product, and staggered text keyframes', () => {
-  // Background starts grey #D9DADD (0.00-0.22), lavender #D3DCF7 by 0.32 (holds to 0.58), pink #F2C6CF by 0.68 (holds to 1.0)
-  assert.equal(interpolatePathwayBackgroundColor(0.0), 'rgb(217, 218, 221)'); // Grey #D9DADD from start
-  assert.equal(interpolatePathwayBackgroundColor(0.22), 'rgb(217, 218, 221)'); // Grey #D9DADD until 0.22
-  assert.equal(interpolatePathwayBackgroundColor(0.32), 'rgb(211, 220, 247)'); // Lavender #D3DCF7 by 0.32 (before P2 enters)
-  assert.equal(interpolatePathwayBackgroundColor(0.58), 'rgb(211, 220, 247)'); // Holds Lavender #D3DCF7 to 0.58
-  assert.equal(interpolatePathwayBackgroundColor(0.68), 'rgb(242, 198, 207)'); // Pink #F2C6CF by 0.68 (before P3 enters)
-  assert.equal(interpolatePathwayBackgroundColor(1.0), 'rgb(242, 198, 207)'); // Holds Pink #F2C6CF until end
+test('master timeline enforces zero-gap background layers, product keyframes, and target scroll positions', () => {
+  // Background starts grey #D9DADD (0.00-0.27), lavender #D3DCF7 by 0.35 (holds to 0.60), pink #F2C6CF by 0.68 (holds to 1.0)
+  assert.equal(interpolatePathwayBackgroundColor(0.0), 'rgb(217, 218, 221)');
+  assert.equal(interpolatePathwayBackgroundColor(0.27), 'rgb(217, 218, 221)');
+  assert.equal(interpolatePathwayBackgroundColor(0.35), 'rgb(211, 220, 247)');
+  assert.equal(interpolatePathwayBackgroundColor(0.60), 'rgb(211, 220, 247)');
+  assert.equal(interpolatePathwayBackgroundColor(0.68), 'rgb(242, 198, 207)');
+  assert.equal(interpolatePathwayBackgroundColor(1.0), 'rgb(242, 198, 207)');
 
-  // Product 1: visible 0.00-0.22 with no enter delay, exits 0.22-0.26
+  // Overlay opacities (Lavender 0->1 over 0.27-0.35, Pink 0->1 over 0.60-0.68, never fade out)
+  assert.equal(evaluateMasterTimeline(0.27).lavenderOpacity, 0);
+  assert.equal(evaluateMasterTimeline(0.35).lavenderOpacity, 1);
+  assert.equal(evaluateMasterTimeline(0.80).lavenderOpacity, 1);
+  assert.equal(evaluateMasterTimeline(0.60).pinkOpacity, 0);
+  assert.equal(evaluateMasterTimeline(0.68).pinkOpacity, 1);
+  assert.equal(evaluateMasterTimeline(1.0).pinkOpacity, 1);
+
+  // Product 1: visible 0.00-0.27 with no enter delay, exits 0.27-0.315
   assert.equal(evaluateMasterTimeline(0.0).products[0].opacity, 1);
   assert.equal(evaluateMasterTimeline(0.0).products[0].isVisible, true);
-  assert.equal(evaluateMasterTimeline(0.22).products[0].opacity, 1);
-  assert.equal(evaluateMasterTimeline(0.27).products[0].isVisible, false);
+  assert.equal(evaluateMasterTimeline(0.27).products[0].opacity, 1);
+  assert.equal(evaluateMasterTimeline(0.32).products[0].isVisible, false);
 
-  // Product 2: enters 0.32-0.38, holds to 0.58, exits 0.58-0.62
-  assert.equal(evaluateMasterTimeline(0.31).products[1].isVisible, false);
-  assert.equal(evaluateMasterTimeline(0.45).products[1].opacity, 1);
-  assert.equal(evaluateMasterTimeline(0.58).products[1].opacity, 1);
-  assert.equal(evaluateMasterTimeline(0.63).products[1].isVisible, false);
+  // Product 2: enters 0.305-0.35, holds to 0.60, exits 0.60-0.645
+  assert.equal(evaluateMasterTimeline(0.30).products[1].isVisible, false);
+  assert.equal(evaluateMasterTimeline(0.35).products[1].opacity, 1);
+  assert.equal(evaluateMasterTimeline(0.50).products[1].opacity, 1);
+  assert.equal(evaluateMasterTimeline(0.60).products[1].opacity, 1);
+  assert.equal(evaluateMasterTimeline(0.65).products[1].isVisible, false);
 
-  // Staggered text motion: earlier steps have higher opacity and smaller translateY than later steps during entry
-  const step0AtEntry = computeTextStepMotion(0.35, 1, 0);
-  const step5AtEntry = computeTextStepMotion(0.35, 1, 5);
-  assert.ok(step0AtEntry.opacity > step5AtEntry.opacity);
-  assert.ok(step0AtEntry.translateY < step5AtEntry.translateY);
-
-  // Product 3: enters 0.68-0.74 and stays visible to p = 1.0 with no exit
-  assert.equal(evaluateMasterTimeline(0.67).products[2].isVisible, false);
-  assert.equal(evaluateMasterTimeline(0.74).products[2].opacity, 1);
-  assert.equal(evaluateMasterTimeline(0.90).products[2].opacity, 1);
+  // Product 3: enters 0.635-0.68 and stays visible to p = 1.0 with no exit
+  assert.equal(evaluateMasterTimeline(0.63).products[2].isVisible, false);
+  assert.equal(evaluateMasterTimeline(0.68).products[2].opacity, 1);
+  assert.equal(evaluateMasterTimeline(0.85).products[2].opacity, 1);
   assert.equal(evaluateMasterTimeline(1.0).products[2].opacity, 1);
   assert.equal(evaluateMasterTimeline(1.0).products[2].isVisible, true);
+
+  // Zero-blank-gap invariant: at every p in [0, 1], at least one product is visible
+  for (let i = 0; i <= 100; i += 1) {
+    const p = i / 100;
+    const state = evaluateMasterTimeline(p);
+    const maxOpacity = Math.max(
+      state.products[0].opacity,
+      state.products[1].opacity,
+      state.products[2].opacity
+    );
+    assert.ok(maxOpacity > 0, `Expected non-zero product opacity at p=${p}, got ${maxOpacity}`);
+  }
+
+  // Target progress and scrollY calculation
+  assert.equal(PATHWAY_TARGET_PROGRESS['weight-loss'], 0.05);
+  assert.equal(PATHWAY_TARGET_PROGRESS['hair-growth'], 0.50);
+  assert.equal(PATHWAY_TARGET_PROGRESS['sexual-health'], 0.85);
+  assert.equal(
+    computeScrollYForPathwayProgress(0.5, 2000, 4500, 785, 115),
+    Math.round(2000 - 115 + 0.5 * (4500 - 785))
+  );
 });
 
 test('carousel index helpers wrap cleanly across 3 slides', () => {

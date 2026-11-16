@@ -73,6 +73,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <img
                       src={action.thumbnailSrc}
                       alt={action.thumbnailAlt}
+                      width={44}
+                      height={44}
+                      decoding="async"
                       referrerPolicy="no-referrer"
                       onError={() =>
                         setThumbErrors((prev) => ({ ...prev, [action.id]: true }))
